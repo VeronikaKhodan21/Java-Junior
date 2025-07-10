@@ -1,5 +1,5 @@
 # Default ignored files
-/shelf/
-/.idea/
-/javaJunior.iml
-/out/
+.idea/
+javaJunior.iml
+out/
+three/
