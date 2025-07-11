@@ -1,10 +1,7 @@
 NiL: Hi
 Git: Hi. Norm?
-NiL: yeslil: lkjhgghj
-lil: 
-lil: 
-lil: 
-lil: 
-lil: 
-lil: 
-lol: yty
+NiL: yes
+Nik: hi
+lil: how are you?
+lil: отключился от сервера
+Nik: отключился от сервера

@@ -1,5 +1,6 @@
 package server;
 
+import java.awt.Font;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -10,14 +11,19 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.JFrame;
+import javax.swing.JTextArea;
 
 public class ServerWindow {
+    private static final int HEIGHT = 300;
+    private static final int WIDTH = 800;
     private static final int PORT = 8080;
     private static final String LOG_PART = "src/server/log.txt";
 
     private final List<ClientHandler> clients = new ArrayList<>();
     private boolean running = true;
     private ServerSocket serverSocket;
+    private JFrame manual;
 
     public void start() throws IOException {
         serverSocket = new ServerSocket(PORT);
@@ -26,12 +32,14 @@ public class ServerWindow {
         // Запуск потока для чтения команд с консоли
         Thread consoleThread = new Thread(this::readConsoleInput);
         consoleThread.start();
+        createManual();
 
         while (running) {
             try {
                 Socket clientSocket = serverSocket.accept();
                 System.out.println("Подключен новый клиент");
                 ClientHandler clientHandler = new ClientHandler(clientSocket);
+
                 synchronized (clients) {
                     clients.add(clientHandler);
                 }
@@ -44,13 +52,30 @@ public class ServerWindow {
         }
     }
 
+    private void createManual() {
+        manual = new JFrame("Инструкция к пользованию чатом клиент-сервер");
+        manual.setSize(WIDTH, HEIGHT);
+        manual.setResizable(false);
+        manual.setLocation(500, 300);
+        // manual.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        JTextArea text = new JTextArea(
+                "Вы видете это окно,значит вы уже запустили сервер\n Теперь следует запустить клиента\n Cразу после запуска клиента вам выпадет окно,\n в котором нужно будет указать порт сервера\n Следом выпадет окно, где нужно указать ваш никнейм\n Откроется окно чата с историей прошлой переписки\n Точно так же следует запустить следующего клиента\n *При нажатии в окне клиента кнопки EXIT клиент отключится от сервера\n * Чтобы запустить клиента снова нужно заново запустить файл с экземпляром клиента\n *Чтобы отключить сервер нужно написать в консоль server stop или stop server");
+        text.setEditable(true);
+        Font font = new Font("Serif", Font.BOLD, 14);
+        text.setFont(font);
+        manual.add(text);
+
+        manual.setVisible(true);
+    }
+
     private void readConsoleInput() {
         BufferedReader consoleReader = new BufferedReader(new InputStreamReader(System.in));
         try {
             String inputLine;
             while (running && (inputLine = consoleReader.readLine()) != null) {
-                if ("stop server".equalsIgnoreCase(inputLine)) {
-                    broadcastMessage("Сервер остановлен.");
+                if ("stop server".equalsIgnoreCase(inputLine) | "server stop".equalsIgnoreCase(inputLine)) {
+                    // broadcastMessage("Сервер остановлен.");
                     stopServer();
                     break;
                 }
@@ -71,10 +96,12 @@ public class ServerWindow {
     private void stopServer() {
         running = false;
         synchronized (clients) {
-            for (ClientHandler client : clients) {
-                client.stopClient();
+            if (clients.size() != 0) {
+                for (ClientHandler client : clients) {
+                    client.stopClient();
+                }
+                clients.clear();
             }
-            clients.clear();
         }
         try {
             if (serverSocket != null && !serverSocket.isClosed()) {
@@ -96,15 +123,15 @@ public class ServerWindow {
             try {
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 out = new PrintWriter(socket.getOutputStream(), true);
-                
-                broadcastMessage(readLog());
+
+                // broadcastMessage(readLog());
             } catch (IOException e) {
                 e.printStackTrace();
                 closeConnections();
             }
         }
 
-        private String readLog() {
+        public String readLog() {
             StringBuilder sb = new StringBuilder();
             try (FileReader readr = new FileReader(LOG_PART);) {
                 int c;
@@ -121,10 +148,12 @@ public class ServerWindow {
 
         @Override
         public void run() {
+
+            sendMessage(readLog());
             try {
                 String inputLine;
                 while (connected && (inputLine = in.readLine()) != null) {
-                    System.out.println("Получено от клиента" + inputLine);
+                    System.out.println("Получено от " + inputLine);
                     saveInLog(inputLine);
                     if ("exit".equalsIgnoreCase(inputLine)) {
                         connected = false;

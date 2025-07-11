@@ -5,7 +5,6 @@ public class Line {
     public static int port = 8081;
 
     public static void main(String[] args) {
-        //new ServerWindow();
         new ClientGUI();
     }
 }

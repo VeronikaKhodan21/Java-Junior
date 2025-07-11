@@ -131,6 +131,11 @@ public class ClientGUI extends JFrame {
         tfMessage.setText("");
     }
 
+    private void writeMesssage(String text) {
+        out.println(name + ": " + text);
+        tfMessage.setText("");
+    }
+
     private Component createExitPanel() {
         Panel panel = new Panel();
         btnExit = new JButton("EXIT");
@@ -158,14 +163,12 @@ public class ClientGUI extends JFrame {
     public void disconnectFromServer() {
         try {
             if (connected) {
-                appendLog("socket");
+                writeMesssage("отключился от сервера");
                 socket.close();
-                appendLog("in potok");
                 in.close();
-                appendLog("out potok");
                 out.close();
                 connected = false;
-                appendLog("Вы отключились от сервера");
+                
             } else {
                 dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
             }
